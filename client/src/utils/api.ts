@@ -66,23 +66,34 @@ export function useApi() {
 }
 
 export async function fetchNotes() {
-  // Get the Clerk token
-  const token = await fetch("/api/auth/token")
-    .then((res) => res.json())
-    .then((data) => data.token);
+  try {
+    // Get the Clerk token
+    const token = await fetch("/api/auth/token")
+      .then((res) => res.json())
+      .then((data) => data.token);
 
-  const response = await fetch(`${API_BASE_URL}/api/notes`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+    console.log("API URL:", `${API_BASE_URL}/api/notes`); // Debug log
 
-  if (!response.ok) {
-    throw new Error(`Error fetching notes: ${response.statusText}`);
+    const response = await fetch(`${API_BASE_URL}/api/notes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Server response:", errorText);
+      throw new Error(
+        `Error fetching notes: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function createNote(data: {

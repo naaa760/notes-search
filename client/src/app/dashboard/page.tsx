@@ -12,7 +12,7 @@ import { fetchNotes } from "@/utils/api";
 
 export default function Dashboard() {
   const api = useApi();
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -26,7 +26,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadNotes() {
       try {
-        setLoading(true);
+        setIsLoading(true);
         setError(null);
         const fetchedNotes = await fetchNotes();
         setNotes(fetchedNotes);
@@ -35,7 +35,7 @@ export default function Dashboard() {
         console.error("Error loading notes:", err);
         setError(err instanceof Error ? err.message : "Failed to load notes");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     }
 
@@ -171,7 +171,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {loading && <p>Loading notes...</p>}
+        {isLoading && <p>Loading notes...</p>}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -179,7 +179,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {!loading && !error && notes.length === 0 && <p>No notes found</p>}
+        {!isLoading && !error && notes.length === 0 && <p>No notes found</p>}
 
         {notes.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,7 +202,9 @@ export default function Dashboard() {
                 )}
 
                 <div className="text-sm text-gray-500">
-                  {new Date(note.updatedAt).toLocaleDateString()}
+                  {note.updatedAt
+                    ? new Date(note.updatedAt).toLocaleDateString()
+                    : ""}
                 </div>
               </div>
             ))}

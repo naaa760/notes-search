@@ -23,17 +23,28 @@ router.use(ClerkExpressRequireAuth());
 const getNotesHandler: RequestHandler = async (req: Request, res: Response) => {
   const reqWithAuth = req as RequestWithAuth;
   try {
+    console.log("Auth user ID:", reqWithAuth.auth?.userId); // Debug log
+
+    // Check if userId exists
+    if (!reqWithAuth.auth?.userId) {
+      return res.status(401).json({ error: "Unauthorized - No user ID found" });
+    }
+
     const userId = reqWithAuth.auth.userId;
-    console.log("Fetching notes for user:", userId);
 
     const notes = await prisma.note.findMany({
       where: { userId },
       orderBy: { updatedAt: "desc" },
     });
-    res.json(notes);
+
+    console.log(`Found ${notes.length} notes for user ${userId}`);
+    return res.json(notes);
   } catch (error) {
     console.error("Error fetching notes:", error);
-    res.status(500).json({ error: "Failed to fetch notes" });
+    return res.status(500).json({
+      error: "Failed to fetch notes",
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 };
 
