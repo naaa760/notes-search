@@ -7,8 +7,10 @@ import NoteEditor from "@/components/NoteEditor";
 import SearchBar from "@/components/SearchBar";
 import TagFilter from "@/components/TagFilter";
 import { Note } from "@/types";
+import { useApi } from "@/utils/api";
 
 export default function Dashboard() {
+  const api = useApi();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -17,38 +19,21 @@ export default function Dashboard() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data for development
+  // Fetch notes
   useEffect(() => {
-    const mockNotes: Note[] = [
-      {
-        id: "1",
-        title: "Welcome to Notes App",
-        content:
-          "This is a sample note to get you started. You can create, edit, and delete notes.",
-        tags: ["welcome", "sample"],
-        summary: "An introduction to the Notes App.",
-      },
-      {
-        id: "2",
-        title: "How to use tags",
-        content:
-          "Tags help you organize your notes. Add tags to your notes and filter by them.",
-        tags: ["tutorial", "tags"],
-        summary: "Learn how to use tags effectively.",
-      },
-      {
-        id: "3",
-        title: "Search functionality",
-        content:
-          "You can search through your notes by title or content. Just type in the search box.",
-        tags: ["tutorial", "search"],
-        summary: "How to search through your notes.",
-      },
-    ];
+    const fetchNotes = async () => {
+      try {
+        const data = await api.notes.getAll();
+        setNotes(data);
+        setFilteredNotes(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+        setIsLoading(false);
+      }
+    };
 
-    setNotes(mockNotes);
-    setFilteredNotes(mockNotes);
-    setIsLoading(false);
+    fetchNotes();
   }, []);
 
   useEffect(() => {
@@ -86,28 +71,35 @@ export default function Dashboard() {
     setFilteredNotes(filtered);
   };
 
-  const handleCreateNote = (note: Omit<Note, "id">) => {
-    // In a real app, this would be an API call
-    const newNote = {
-      ...note,
-      id: Date.now().toString(),
-    };
-
-    setNotes((prev) => [...prev, newNote]);
-    setSelectedNote(null);
-  };
-
-  const handleUpdateNote = (note: Note) => {
-    // In a real app, this would be an API call
-    setNotes((prev) => prev.map((n) => (n.id === note.id ? note : n)));
-    setSelectedNote(null);
-  };
-
-  const handleDeleteNote = (id: string) => {
-    // In a real app, this would be an API call
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-    if (selectedNote?.id === id) {
+  const handleCreateNote = async (note: Omit<Note, "id">) => {
+    try {
+      const newNote = await api.notes.create(note);
+      setNotes((prev) => [...prev, newNote]);
       setSelectedNote(null);
+    } catch (error) {
+      console.error("Error creating note:", error);
+    }
+  };
+
+  const handleUpdateNote = async (note: Note) => {
+    try {
+      const updatedNote = await api.notes.update(note.id, note);
+      setNotes((prev) => prev.map((n) => (n.id === note.id ? updatedNote : n)));
+      setSelectedNote(null);
+    } catch (error) {
+      console.error("Error updating note:", error);
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await api.notes.delete(id);
+      setNotes((prev) => prev.filter((note) => note.id !== id));
+      if (selectedNote?.id === id) {
+        setSelectedNote(null);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Note } from "@/types";
+import { useApi } from "@/utils/api";
 
 interface NoteEditorProps {
   note: Note;
@@ -17,6 +18,8 @@ export default function NoteEditor({
   const [tags, setTags] = useState<string[]>(note.tags || []);
   const [tagInput, setTagInput] = useState("");
   const [summary, setSummary] = useState(note.summary || "");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const api = useApi();
 
   useEffect(() => {
     setTitle(note.title);
@@ -50,6 +53,20 @@ export default function NoteEditor({
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!content.trim()) return;
+
+    setIsGeneratingSummary(true);
+    try {
+      const { summary: generatedSummary } = await api.notes.summarize(content);
+      setSummary(generatedSummary);
+    } catch (error) {
+      console.error("Failed to generate summary:", error);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
   };
 
   return (
@@ -141,12 +158,22 @@ export default function NoteEditor({
       </div>
 
       <div className="mb-6">
-        <label
-          htmlFor="summary"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Summary
-        </label>
+        <div className="flex justify-between items-center mb-1">
+          <label
+            htmlFor="summary"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Summary
+          </label>
+          <button
+            type="button"
+            onClick={handleGenerateSummary}
+            disabled={isGeneratingSummary}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            {isGeneratingSummary ? "Generating..." : "Generate AI Summary"}
+          </button>
+        </div>
         <textarea
           id="summary"
           value={summary}
