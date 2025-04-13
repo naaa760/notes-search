@@ -64,3 +64,92 @@ export function useApi() {
     },
   };
 }
+
+export async function fetchNotes() {
+  // Get the Clerk token
+  const token = await fetch("/api/auth/token")
+    .then((res) => res.json())
+    .then((data) => data.token);
+
+  const response = await fetch(`${API_BASE_URL}/api/notes`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching notes: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function createNote(data: {
+  title: string;
+  content: string;
+  tags: string[];
+}) {
+  const token = await fetch("/api/auth/token")
+    .then((res) => res.json())
+    .then((data) => data.token);
+
+  const response = await fetch(`${API_BASE_URL}/api/notes`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error creating note: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function updateNote(
+  id: string,
+  data: { title: string; content: string; tags: string[] }
+) {
+  const token = await fetch("/api/auth/token")
+    .then((res) => res.json())
+    .then((data) => data.token);
+
+  const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error updating note: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function deleteNote(id: string) {
+  const token = await fetch("/api/auth/token")
+    .then((res) => res.json())
+    .then((data) => data.token);
+
+  const response = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error deleting note: ${response.statusText}`);
+  }
+
+  return response.json();
+}

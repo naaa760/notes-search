@@ -10,7 +10,16 @@ const app = express();
 const prisma = new PrismaClient();
 
 // CORS configuration
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://notes-search-qmee.vercel.app",
+      "https://notes-search-324z.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Add this as a middleware before routes

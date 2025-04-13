@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SignOutButton } from "@clerk/nextjs";
+import { SignOutButton, useUser } from "@clerk/nextjs";
 import NoteList from "@/components/NoteList";
 import NoteEditor from "@/components/NoteEditor";
 import SearchBar from "@/components/SearchBar";
 import TagFilter from "@/components/TagFilter";
 import { Note } from "@/types";
 import { useApi } from "@/utils/api";
+import { fetchNotes } from "@/utils/api";
 
 export default function Dashboard() {
   const api = useApi();
+  const { isLoaded, isSignedIn, user } = useUser();
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -18,23 +20,29 @@ export default function Dashboard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch notes
   useEffect(() => {
-    const fetchNotes = async () => {
+    async function loadNotes() {
       try {
-        const data = await api.notes.getAll();
-        setNotes(data);
-        setFilteredNotes(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching notes:", error);
-        setIsLoading(false);
+        setLoading(true);
+        setError(null);
+        const fetchedNotes = await fetchNotes();
+        setNotes(fetchedNotes);
+        setFilteredNotes(fetchedNotes);
+      } catch (err) {
+        console.error("Error loading notes:", err);
+        setError(err instanceof Error ? err.message : "Failed to load notes");
+      } finally {
+        setLoading(false);
       }
-    };
+    }
 
-    fetchNotes();
-  }, []);
+    if (isLoaded && isSignedIn) {
+      loadNotes();
+    }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     // Extract all unique tags from notes
@@ -103,6 +111,10 @@ export default function Dashboard() {
     }
   };
 
+  if (!isLoaded || !isSignedIn) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,6 +170,44 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {loading && <p>Loading notes...</p>}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && notes.length === 0 && <p>No notes found</p>}
+
+        {notes.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {notes.map((note) => (
+              <div key={note.id} className="bg-white p-4 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-2">{note.title}</h3>
+                <p className="text-gray-700 mb-3">{note.content}</p>
+
+                {note.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {note.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-sm text-gray-500">
+                  {new Date(note.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
