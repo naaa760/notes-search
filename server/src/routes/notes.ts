@@ -11,14 +11,23 @@ interface RequestWithAuth extends Request {
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Add this middleware to log requests
+router.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // Apply middleware to all routes
 router.use(ClerkExpressRequireAuth());
 
 const getNotesHandler: RequestHandler = async (req: Request, res: Response) => {
   const reqWithAuth = req as RequestWithAuth;
   try {
+    const userId = reqWithAuth.auth.userId;
+    console.log("Fetching notes for user:", userId);
+
     const notes = await prisma.note.findMany({
-      where: { userId: reqWithAuth.auth.userId },
+      where: { userId },
       orderBy: { updatedAt: "desc" },
     });
     res.json(notes);
