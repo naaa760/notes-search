@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "npm install && npm run build",
+  "installCommand": "npm install",
   "builds": [
     {
       "src": "src/index.ts",
@@ -9,11 +11,11 @@
   "routes": [
     {
       "src": "/api/notes/(.*)",
-      "dest": "src/index.ts"
+      "dest": "/src/index.ts"
     },
     {
       "src": "/(.*)",
-      "dest": "src/index.ts"
+      "dest": "/src/index.ts"
     }
   ],
   "env": {
