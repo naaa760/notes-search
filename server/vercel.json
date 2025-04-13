@@ -12,8 +12,5 @@
       "dest": "src/index.ts"
     }
   ],
-  "env": {
-    "DATABASE_URL": "postgresql://neondb_owner:npg_0qVvfcF2Kdje@ep-rough-wind-a58n84i7-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require",
-    "CLERK_SECRET_KEY": "sk_test_QTOtvHxD679JALrOpIbTgyau5vSMKpDrd2p2OWRNUT"
-  }
+  "outputDirectory": "public"
 }
