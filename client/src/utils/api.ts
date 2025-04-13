@@ -1,8 +1,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { Note } from "@/types";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://notes-search-delta.vercel.app";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 interface FetchOptions {
   method?: string;
@@ -17,21 +16,29 @@ export function useApi() {
     endpoint: string,
     options: FetchOptions = {}
   ) => {
-    const token = await getToken();
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
-    });
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(
+          error.error || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("API request failed:", error);
+      throw error;
     }
-
-    return response.json();
   };
 
   return {

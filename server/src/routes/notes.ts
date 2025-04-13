@@ -136,7 +136,6 @@ const summarizeNoteHandler: RequestHandler = async (
   }
 };
 
-router.get("/", getNotesHandler);
 router.post("/", createNoteHandler);
 router.put("/:id", updateNoteHandler);
 router.delete("/:id", deleteNoteHandler);

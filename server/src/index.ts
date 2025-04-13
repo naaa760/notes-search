@@ -31,7 +31,20 @@ prisma
     console.error("Failed to connect to database:", err);
   });
 
-// Error handling middleware
+// Add this near the top after imports
+const handleError = (err: any) => {
+  console.error("Error details:", {
+    message: err.message,
+    stack: err.stack,
+    code: err.code,
+  });
+  return {
+    error: err.message || "Internal Server Error",
+    code: err.code,
+  };
+};
+
+// Update your error middleware
 app.use(
   (
     err: any,
@@ -39,18 +52,15 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error("Error details:", {
-      message: err.message,
-      stack: err.stack,
-      code: err.code,
-    });
-
-    res.status(500).json({
-      error: err.message || "Internal Server Error",
-      code: err.code,
-    });
+    const error = handleError(err);
+    res.status(500).json(error);
   }
 );
+
+// Add this after your routes but before error handling
+app.use((req, res) => {
+  res.status(404).json({ error: "Not Found" });
+});
 
 // Add this before the error handler
 process.on("unhandledRejection", (reason, promise) => {
