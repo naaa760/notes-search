@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { Note } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface FetchOptions {
   method?: string;
@@ -67,12 +67,9 @@ export function useApi() {
 
 export async function fetchNotes() {
   try {
-    // Get the Clerk token
     const token = await fetch("/api/auth/token")
       .then((res) => res.json())
       .then((data) => data.token);
-
-    console.log("API URL:", `${API_BASE_URL}/api/notes`); // Debug log
 
     const response = await fetch(`${API_BASE_URL}/api/notes`, {
       headers: {
@@ -82,11 +79,7 @@ export async function fetchNotes() {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server response:", errorText);
-      throw new Error(
-        `Error fetching notes: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Error fetching notes: ${response.status}`);
     }
 
     return response.json();
