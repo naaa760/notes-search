@@ -13,6 +13,12 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// Add this as a middleware before routes
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Health check endpoint
 app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
@@ -21,7 +27,8 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/notes", notesRouter);
 
-// After creating the PrismaClient instance
+// Move this near the top, after creating the prisma client
+// and before defining routes
 prisma
   .$connect()
   .then(() => {
@@ -29,6 +36,10 @@ prisma
   })
   .catch((err) => {
     console.error("Failed to connect to database:", err);
+    // Don't exit in production, but log error
+    if (process.env.NODE_ENV !== "production") {
+      process.exit(1);
+    }
   });
 
 // Add this near the top after imports
